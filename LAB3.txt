@@ -1,0 +1,91 @@
+import java.util.*;
+
+class Main {
+    static String mnt[][] = new String[5][3]; // assuming 5 macros in 1 program
+    static String ala[][] = new String[10][2]; // assuming 2 arguments in each macro
+    static String mdt[][] = new String[20][2]; // increased column size to 2 for better storage
+    static int mntc = 0, mdtc = 0, alac = 0;
+
+    public static void main(String args[]) {
+        pass1();
+        System.out.println("\n*********PASS-1 MACROPROCESSOR***********\n");
+        System.out.println("MACRO NAME TABLE (MNT)\n");
+        System.out.println("i macro loc\n");
+        display(mnt, mntc, 3);
+        System.out.println("\n");
+        System.out.println("ARGUMENT LIST ARRAY(ALA) for Pass1\n");
+        display(ala, alac, 2);
+        System.out.println("\n");
+        System.out.println("MACRO DEFINITION TABLE (MDT)\n");
+        display(mdt, mdtc, 2);
+        System.out.println("\n");
+    }
+
+    static void pass1() {
+        int index = 0, i;
+        String s, prev = "", substring;
+
+        // Hardcoded input lines
+        String[] inputLines = {
+            "MACRO",
+            "INCR &ARG1 &ARG2",
+            "ADD AREG &ARG1",
+            "ADD BREG &ARG2",
+            "MEND",
+            "START",
+            "MOVER AREG S1",
+            "MOVER BREG S1",
+            "INCR D1 D2",
+            "S1 DC 5",
+            "D1 DC 2",
+            "D2 DC 3",
+            "END"
+        };
+
+        for (int lineIndex = 0; lineIndex < inputLines.length; lineIndex++) {
+            s = inputLines[lineIndex];
+            if (s.equalsIgnoreCase("MACRO")) {
+                prev = s;
+                lineIndex++; // Move to the next line after MACRO
+                s = inputLines[lineIndex];
+
+                // Process macro definition
+                StringTokenizer st = new StringTokenizer(s);
+                String macroName = st.nextToken(); // First token is the macro name
+                mnt[mntc][0] = (mntc + 1) + ""; // MNT entry: index
+                mnt[mntc][1] = macroName; // MNT entry: macro name
+                mnt[mntc][2] = mdtc + ""; // MNT entry: starting location in MDT
+                mntc++;
+
+                // Process arguments
+                while (st.hasMoreTokens()) {
+                    String arg = st.nextToken();
+                    ala[alac][0] = "#"+alac + ""; // ALA entry: index
+                    ala[alac][1] = arg.replace("&", ""); // ALA entry: argument name
+                    alac++;
+                }
+
+                // Process macro body
+                while (!(s = inputLines[++lineIndex]).equalsIgnoreCase("MEND")) {
+                    mdt[mdtc][0] = mdtc + ""; // MDT entry: index
+                    mdt[mdtc][1] = s; // MDT entry: macro body line
+                    mdtc++;
+                }
+                mdt[mdtc][0] = mdtc + ""; // MDT entry: index for MEND
+                mdt[mdtc][1] = s; // MDT entry: MEND
+                mdtc++;
+            } else {
+                // Output the line (if needed)
+                System.out.println(s);
+            }
+        }
+    }
+
+    static void display(String a[][], int n, int m) {
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++)
+                System.out.print(a[i][j] + " ");
+            System.out.println();
+        }
+    }
+}
