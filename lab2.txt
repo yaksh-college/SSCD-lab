@@ -1,0 +1,56 @@
+import java.util.*;
+
+public class Main {
+    public static void main(String[] args) {
+        List<String[]> intermediateCode = Arrays.asList(
+            new String[]{"NULL", "AD01", "NULL", "C250"},
+            new String[]{"250", "IS05", "01", "S1"},
+            new String[]{"251", "IS03", "02", "S1"},
+            new String[]{"252", "IS05", "02", "S3"},
+            new String[]{"NULL", "AD04", "NULL", "S2"},
+            new String[]{"253", "IS05", "02", "S1"},
+            new String[]{"254", "DL02", "NULL", "C3"},
+            new String[]{"257", "DL01", "NULL", "C3"},
+            new String[]{"258", "AD02", "NULL", "NULL"}
+        );
+        Map<Integer, String[]> symbolTable = new HashMap<>();
+        symbolTable.put(1, new String[]{"S1", "254"});
+        symbolTable.put(2, new String[]{"S2", "251"});
+        symbolTable.put(3, new String[]{"S3", "257"});
+        symbolTable.put(4, new String[]{"S4", "251"});
+
+        System.out.println("Intermediate Code:");
+        intermediateCode.forEach(row -> System.out.println(String.join("\t", row)));
+        System.out.println("\nSymbol Table:");
+        symbolTable.forEach((id, details) -> 
+            System.out.println(id + "\t" + details[0] + "\t" + details[1])
+        );
+        System.out.println("\nMachine Code:");
+        for (String[] instruction : intermediateCode) {
+            String locationCounter = instruction[0];
+            String operationCode = instruction[1];
+            String operand1 = instruction[2];
+            String operand2 = instruction[3];
+            String machineOpcode = "";
+            String machineOp2 = "";
+          
+            if (!operationCode.startsWith("AD02") && operationCode.startsWith("AD")) {
+                System.out.println();
+                continue;
+            }
+            if (operationCode.startsWith("IS")) {
+                machineOpcode = operationCode.substring(2);
+            }                                                                                                                                                                                                        
+            if (operationCode.startsWith("DL")) {
+                // System.out.println(locationCounter); 
+                machineOpcode = operationCode.substring(2);
+              
+            }
+            if (operand2.startsWith("S")) {
+                int symbolId = Integer.parseInt(operand2.substring(1));
+                machineOp2 = symbolTable.getOrDefault(symbolId, new String[]{"", "???"})[1];
+            }
+            System.out.println(locationCounter + "\t" + machineOpcode + "\t" + operand1 + "\t" + machineOp2);
+        }
+    }
+}

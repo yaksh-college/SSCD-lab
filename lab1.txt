@@ -1,0 +1,156 @@
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
+ 
+public class Main {
+ 
+    static final Map<String, String[]> optab = new HashMap<>() {{
+        put("ADD", new String[]{"01", "IS"});
+        put("SUB", new String[]{"02", "IS"});
+        put("MUL", new String[]{"03", "IS"});
+        put("DIV", new String[]{"04", "IS"});
+        put("BC", new String[]{"05", "IS"});
+        put("READ", new String[]{"06", "IS"});
+        put("PRINT", new String[]{"07", "IS"});
+        put("MOVER", new String[]{"08", "IS"});
+        put("MOVEM", new String[]{"09", "IS"});
+        put("DC", new String[]{"01", "DS"});
+        put("DS", new String[]{"02", "DS"});
+        put("START", new String[]{"01", "AD"});
+        put("END", new String[]{"02", "AD"});
+    }};
+ 
+    static final Map<String, String> regtable = new HashMap<>() {{
+        put("AREG", "01");
+        put("BREG", "02");
+        put("CREG", "03");
+        put("DREG", "04");
+    }};
+ 
+    static final Map<String, Integer> symbolTable = new HashMap<>();
+    static int currentAddress = 0;
+    static boolean startInstructionFound = false;
+    static boolean endInstructionFound = false;
+ 
+    public static void main(String[] args) {
+        System.out.println("Starting Program...");
+ 
+        Scanner inputScanner = new Scanner(System.in);
+        int sentenceCount = 0;
+ 
+        System.out.println("Choose input mode:");
+        System.out.println("1. Enter lines manually");
+
+ 
+        int choice = inputScanner.nextInt();
+        inputScanner.nextLine();
+ 
+        if (choice == 1) {
+            System.out.println("Enter sentences (type 'exit' to stop):");
+            String inp;
+            while (!(inp = inputScanner.nextLine()).equalsIgnoreCase("exit")) {
+                sentenceCount++;
+                classifyAndProcessSentence(inp, sentenceCount);
+            }
+        }     else {
+            System.out.println("Invalid choice! Please restart the program.");
+        }
+ 
+        if (endInstructionFound) {
+            System.out.println("\nSymbol Table:");
+            System.out.println("-----------------------------------------------------");
+            System.out.printf("| %-12s | %-12s |\n", "Symbol", "Address");
+            System.out.println("-----------------------------------------------------");
+            for (Map.Entry<String, Integer> entry : symbolTable.entrySet()) {
+                System.out.printf("| %-12s | %-12d |\n", entry.getKey(), entry.getValue());
+            }
+            System.out.println("-----------------------------------------------------");
+        } else {
+            System.out.println("No END instruction found. Symbol table not displayed.");
+        }
+ 
+        System.out.println("\nTotal sentences processed: " + sentenceCount);
+        inputScanner.close();
+    }
+ 
+    private static void classifyAndProcessSentence(String sentence, int sentenceCount) {
+        System.out.println("\nSentence " + sentenceCount + ":");
+        Scanner lineScanner = new Scanner(sentence);
+ 
+        String label = null;
+        String instruction = null;
+        String operand1 = null;
+        String operand2 = null;
+ 
+        int tokenIndex = 0;
+        while (lineScanner.hasNext()) {
+            String token = lineScanner.next();
+            tokenIndex++;
+ 
+            if ("*".equals(token)) {
+                token = String.valueOf(currentAddress);
+            }
+ 
+            if (tokenIndex == 1 && !optab.containsKey(token)) {
+                label = token;
+                if (!symbolTable.containsKey(label)) {
+                    if (startInstructionFound) {
+                        symbolTable.put(label, currentAddress);
+                    }
+                }
+            } else if (optab.containsKey(token)) {
+                instruction = token;
+            } else if (regtable.containsKey(token)) {
+                if (operand1 == null) {
+                    operand1 = token;
+                } else {
+                    operand2 = token;
+                }
+            } else {
+                if (operand1 == null) {
+                    operand1 = token;
+                } else {
+                    operand2 = token;
+                }
+            }
+        }
+ 
+        if ("START".equalsIgnoreCase(instruction)) {
+ currentAddress = Integer.parseInt(operand1);
+ startInstructionFound = true;
+ System.out.println(" START instruction found. Address set to: " + currentAddress);
+ }
+ 
+ if (instruction != null) {
+ String[] instructionDetails = optab.get(instruction);
+ System.out.println(" Instruction: " + instruction + " (Opcode: " + instructionDetails[0] + ", Class: " + instructionDetails[1] + ")");
+ if ("IS".equals(instructionDetails[1])) {
+ currentAddress++;
+ } else if ("DS".equals(instructionDetails[1])) {
+ if ("DC".equals(instruction)) {
+ currentAddress++;
+ } else if ("DS".equals(instruction)) {
+ currentAddress++;
+ }
+ }
+ }
+ 
+ if (label != null) {
+ System.out.println(" Label: " + label);
+ }
+ if (operand1 != null) {
+ System.out.println(" Operand1: " + operand1 + (regtable.containsKey(operand1) ? " (Register Opcode: " + regtable.get(operand1) + ")" : ""));
+ }
+ if (operand2 != null) {
+ System.out.println(" Operand2: " + operand2 + (regtable.containsKey(operand2) ? " (Register Opcode: " + regtable.get(operand2) + ")" : ""));
+ }
+ 
+ if ("END".equalsIgnoreCase(instruction)) {
+ endInstructionFound = true;
+ }
+ 
+ lineScanner.close();
+ }
+}
